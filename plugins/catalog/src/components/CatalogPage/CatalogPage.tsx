@@ -19,10 +19,8 @@ import {
   Content,
   ContentHeader,
   DismissableBanner,
-  HeaderTabs,
   SupportButton,
 } from '@backstage/core';
-import CatalogLayout from './CatalogLayout';
 import { rootRoute as scaffolderRootRoute } from '@backstage/plugin-scaffolder';
 import {
   Button,
@@ -35,18 +33,16 @@ import Edit from '@material-ui/icons/Edit';
 import GitHub from '@material-ui/icons/GitHub';
 import Star from '@material-ui/icons/Star';
 import StarOutline from '@material-ui/icons/StarBorder';
-import React, { FC } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import { filterGroups, LabeledEntityType } from '../../data/filters';
+import { findLocationForEntityMeta } from '../../data/utils';
+import { EntityFilterGroupsProvider, useFilteredEntities } from '../../filter';
+import { useStarredEntities } from '../../hooks/useStarredEntites';
 import { CatalogFilter } from '../CatalogFilter/CatalogFilter';
 import { CatalogTable } from '../CatalogTable/CatalogTable';
-import { useEntities } from '../../hooks/useEntities';
-import { findLocationForEntityMeta } from '../../data/utils';
-import {
-  getCatalogFilterItemByType,
-  EntityGroup,
-  filterGroups,
-  labeledEntityTypes,
-} from '../../data/filters';
+import CatalogLayout from './CatalogLayout';
+import { CatalogTabs } from './CatalogTabs';
 
 const useStyles = makeStyles(theme => ({
   contentWrapper: {
@@ -61,21 +57,11 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-export const CatalogPage: FC<{}> = () => {
-  const {
-    entitiesByFilter,
-    error,
-    loading,
-    selectedFilter,
-    setSelectedFilter,
-    toggleStarredEntity,
-    isStarredEntity,
-    selectTypeFilter,
-  } = useEntities();
-
-  const filteredEntities = entitiesByFilter[selectedFilter ?? EntityGroup.ALL];
-
+const CatalogPageContents: FC<{}> = () => {
   const styles = useStyles();
+  const { isStarredEntity, toggleStarredEntity } = useStarredEntities();
+  const { loading, error, matchingEntities } = useFilteredEntities();
+  const [selectedTab, setSelectedTab] = useState<string>();
 
   const YellowStar = withStyles({
     root: {
@@ -129,14 +115,13 @@ export const CatalogPage: FC<{}> = () => {
     },
   ];
 
+  const onTabChanged = useCallback((type: LabeledEntityType) => {
+    setSelectedTab(type.label);
+  }, []);
+
   return (
     <CatalogLayout>
-      <HeaderTabs
-        tabs={labeledEntityTypes}
-        onChange={(index: Number) => {
-          selectTypeFilter(labeledEntityTypes[index as number].id);
-        }}
-      />
+      <CatalogTabs onChange={onTabChanged} />
       <Content>
         <DismissableBanner
           variant="info"
@@ -155,7 +140,7 @@ export const CatalogPage: FC<{}> = () => {
           }
           id="catalog_page_welcome_banner"
         />
-        <ContentHeader title="Services">
+        <ContentHeader title={selectedTab ?? ''}>
           <Button
             component={RouterLink}
             variant="contained"
@@ -168,20 +153,12 @@ export const CatalogPage: FC<{}> = () => {
         </ContentHeader>
         <div className={styles.contentWrapper}>
           <div>
-            <CatalogFilter
-              groups={filterGroups}
-              selectedFilter={selectedFilter ?? EntityGroup.ALL}
-              onFilterChange={setSelectedFilter}
-              entitiesByFilter={entitiesByFilter}
-            />
+            <CatalogFilter filterGroups={filterGroups} />
           </div>
           <CatalogTable
-            titlePreamble={
-              getCatalogFilterItemByType(selectedFilter ?? EntityGroup.ALL)
-                ?.label ?? ''
-            }
-            entities={filteredEntities || []}
-            loading={loading && !error}
+            titlePreamble={selectedTab ?? ''}
+            entities={matchingEntities}
+            loading={loading}
             error={error}
             actions={actions}
           />
@@ -190,3 +167,9 @@ export const CatalogPage: FC<{}> = () => {
     </CatalogLayout>
   );
 };
+
+export const CatalogPage = () => (
+  <EntityFilterGroupsProvider>
+    <CatalogPageContents />
+  </EntityFilterGroupsProvider>
+);

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
 import { wrapInTestApp } from '@backstage/test-utils';
-import { CatalogFilter, CatalogFilterGroup } from './CatalogFilter';
+import { render } from '@testing-library/react';
+import React from 'react';
 import { EntityGroup } from '../../data/filters';
+import { CatalogFilter, CatalogFilterGroup } from './CatalogFilter';
 
 describe('Catalog Filter', () => {
   const comp1 = {
@@ -60,6 +60,7 @@ describe('Catalog Filter', () => {
       [EntityGroup.OWNED]: [comp1],
     },
   };
+
   it('should render the different groups', async () => {
     const mockGroups: CatalogFilterGroup[] = [
       { name: 'Test Group 1', items: [] },
@@ -67,7 +68,7 @@ describe('Catalog Filter', () => {
     ];
     const { findByText } = render(
       wrapInTestApp(
-        <CatalogFilter {...defaultFilterProps} groups={mockGroups} />,
+        <CatalogFilter {...defaultFilterProps} filterGroups={mockGroups} />,
       ),
     );
 
@@ -95,7 +96,7 @@ describe('Catalog Filter', () => {
 
     const { findByText } = render(
       wrapInTestApp(
-        <CatalogFilter {...defaultFilterProps} groups={mockGroups} />,
+        <CatalogFilter {...defaultFilterProps} filterGroups={mockGroups} />,
       ),
     );
 
@@ -126,7 +127,7 @@ describe('Catalog Filter', () => {
 
     const { getAllByText } = render(
       wrapInTestApp(
-        <CatalogFilter {...defaultFilterProps} groups={mockGroups} />,
+        <CatalogFilter {...defaultFilterProps} filterGroups={mockGroups} />,
       ),
     );
 
@@ -137,46 +138,6 @@ describe('Catalog Filter', () => {
       const items = await getAllByText(matcher);
       items.forEach(el => expect(el).toBeInTheDocument());
     }
-  });
-
-  it('should fire the callback when an item is clicked', async () => {
-    const mockGroups: CatalogFilterGroup[] = [
-      {
-        name: 'Test Group 1',
-        items: [
-          {
-            id: EntityGroup.ALL,
-            label: 'First Label',
-            count: 100,
-          },
-          {
-            id: EntityGroup.STARRED,
-            label: 'Second Label',
-            count: 400,
-          },
-        ],
-      },
-    ];
-
-    const onSelectedChangeHandler = jest.fn();
-
-    const { findByText } = render(
-      wrapInTestApp(
-        <CatalogFilter
-          {...defaultFilterProps}
-          groups={mockGroups}
-          onFilterChange={onSelectedChangeHandler}
-        />,
-      ),
-    );
-
-    const item = mockGroups[0].items[0];
-
-    const element = await findByText(item.label);
-
-    fireEvent.click(element);
-
-    expect(onSelectedChangeHandler).toHaveBeenCalledWith(item.id);
   });
 
   it('should render a component when a function is passed to the count component', async () => {
@@ -199,7 +160,7 @@ describe('Catalog Filter', () => {
     ];
     const { findByText } = render(
       wrapInTestApp(
-        <CatalogFilter {...defaultFilterProps} groups={mockGroups} />,
+        <CatalogFilter {...defaultFilterProps} filterGroups={mockGroups} />,
       ),
     );
 

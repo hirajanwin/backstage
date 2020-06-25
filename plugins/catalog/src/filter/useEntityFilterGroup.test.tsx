@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { renderHook, act } from '@testing-library/react-hooks';
-import {
-  EntityFilterGroupsProvider,
-  useEntityFilterGroup,
-  FilterGroupStatesReady,
-} from './useEntityFilterGroup';
 import { ApiProvider, ApiRegistry } from '@backstage/core';
-import { catalogApiRef } from '..';
+import { act, renderHook } from '@testing-library/react-hooks';
+import React from 'react';
+import { catalogApiRef } from '../api/types';
+import { EntityFilterGroupsProvider } from './EntityFilterGroupsProvider';
+import { FilterGroupStatesReady } from './types';
+import { useEntityFilterGroup } from './useEntityFilterGroup';
 
 describe('useEntityFilterGroup', () => {
   let catalogApi: jest.Mocked<typeof catalogApiRef.T>;
@@ -85,7 +83,7 @@ describe('useEntityFilterGroup', () => {
       matchCount: 0,
     });
 
-    act(() => result.current.selectItems(['f1']));
+    act(() => result.current.setSelectedFilters(['f1']));
 
     await wait(() => expect(result.current.state.type).toEqual('ready'));
     state = result.current.state as FilterGroupStatesReady;
@@ -98,7 +96,7 @@ describe('useEntityFilterGroup', () => {
       matchCount: 0,
     });
 
-    act(() => result.current.selectItems(['f2']));
+    act(() => result.current.setSelectedFilters(['f2']));
 
     await wait(() => expect(result.current.state.type).toEqual('ready'));
     state = result.current.state as FilterGroupStatesReady;
